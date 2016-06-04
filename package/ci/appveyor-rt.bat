@@ -1,6 +1,22 @@
 call "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/vcvarsall.bat" || exit /b
 set PATH=%APPVEYOR_BUILD_FOLDER%\deps-native\bin;%PATH%
 
+rem Build ANGLE
+git clone --depth 1 git://github.com/MSOpenTech/angle.git || exit /b
+cd angle\winrt\10\src || exit /b
+msbuild angle.sln || exit /b
+dir /s/b *.dll || exit /b
+cd ..\..\..\.. || exit /b
+
+rem Build SDL
+appveyor DownloadFile https://www.libsdl.org/release/SDL2-2.0.4.zip || exit /b
+7z x SDL2-2.0.4.zip || exit /b
+ren SDL2-2.0.4 SDL || exit /b
+cd SDL/VisualC-WinRT/UWP_VS2015 || exit/b
+msbuild || exit /b
+dir /s/b *.dll || exit /b
+cd ..\..\..
+
 git clone --depth 1 git://github.com/mosra/corrade.git || exit /b
 cd corrade || exit /b
 

@@ -35,25 +35,7 @@
 
 namespace Magnum { namespace Platform {
 
-#ifndef DOXYGEN_GENERATING_OUTPUT
-WindowlessCglApplication::WindowlessCglApplication(const Arguments& arguments): WindowlessCglApplication{arguments, Configuration{}} {}
-#endif
-
-WindowlessCglApplication::WindowlessCglApplication(const Arguments& arguments, const Configuration& configuration): WindowlessCglApplication{arguments, nullptr} {
-    createContext(configuration);
-}
-
-WindowlessCglApplication::WindowlessCglApplication(const Arguments& arguments, std::nullptr_t): _context{new Context{NoCreate, arguments.argc, arguments.argv}} {}
-
-void WindowlessCglApplication::createContext() { createContext({}); }
-
-void WindowlessCglApplication::createContext(const Configuration& configuration) {
-    if(!tryCreateContext(configuration)) std::exit(1);
-}
-
-bool WindowlessCglApplication::tryCreateContext(const Configuration&) {
-    CORRADE_ASSERT(_context->version() == Version::None, "Platform::WindowlessCglApplication::tryCreateContext(): context already created", false);
-
+WindowlessCglContext::WindowlessCglContext(const Configuration& configuration) {
     int formatCount;
     CGLPixelFormatAttribute attributes32[] = {
         kCGLPFAAccelerated,
@@ -91,20 +73,62 @@ bool WindowlessCglApplication::tryCreateContext(const Configuration&) {
         return false;
     }
 
-    if(CGLSetCurrentContext(_glContext) != kCGLNoError) {
-        Error() << "Platform::WindowlessCglApplication::tryCreateContext(): cannot make context current";
-        return false;
-    }
-
-    /* Return true if the initialization succeeds */
-    return _context->tryCreate();
+    return true;
 }
 
-WindowlessCglApplication::~WindowlessCglApplication() {
-    _context.reset();
+WindowlessCglContext::WindowlessCglContext(NoCreateT): _pixelFormat{}, _context{} {}
 
-    CGLDestroyContext(_glContext);
-    CGLDestroyPixelFormat(_pixelFormat);
+WindowlessCglContext::WindowlessCglContext(WindowlessCglContext&& other): _pixelFormat{other._pixelFormat}, _context{other._context} {
+    other._pixelFormat = {};
+    other._context = {};
+}
+
+WindowlessCglContext::~WindowlessCglContext() {
+    if(_context) CGLDestroyContext(_context);
+    if(_pixelFormat) CGLDestroyPixelFormat(_pixelFormat);
+}
+
+WindowlessCglContext& WindowlessCglContext::operator=(WindowlessCglContext&& other) {
+    using std::swap;
+    swap(other._pixelFormat, _pixelFormat);
+    swap(other._context, _context);
+}
+
+bool WindowlessCglContext::makeCurrent() {
+    if(CGLSetCurrentContext(_glContext) == kCGLNoError)
+        return true;
+
+    Error() << "Platform::WindowlessCglContext::makeCurrent(): cannot make context current";
+    return false;
+}
+
+#ifndef DOXYGEN_GENERATING_OUTPUT
+WindowlessCglApplication::WindowlessCglApplication(const Arguments& arguments): WindowlessCglApplication{arguments, Configuration{}} {}
+#endif
+
+WindowlessCglApplication::WindowlessCglApplication(const Arguments& arguments, const Configuration& configuration): WindowlessCglApplication{arguments, nullptr} {
+    createContext(configuration);
+}
+
+WindowlessCglApplication::WindowlessCglApplication(const Arguments& arguments, NoCreateT): _glContext{NoCreateT}, _context{new Context{NoCreate, arguments.argc, arguments.argv}} {}
+
+WindowlessCglApplication::~WindowlessCglApplication() = default;
+
+void WindowlessCglApplication::createContext() { createContext({}); }
+
+void WindowlessCglApplication::createContext(const Configuration& configuration) {
+    if(!tryCreateContext(configuration)) std::exit(1);
+}
+
+bool WindowlessCglApplication::tryCreateContext(const Configuration& configuration) {
+    CORRADE_ASSERT(_context->version() == Version::None, "Platform::WindowlessCglApplication::tryCreateContext(): context already created", false);
+
+    WindowlessCglContext glContext{configuration};
+    if(!glContext.isCreated() || !glContext.makeCurrent() || !_context->tryCreate())
+        return false;
+
+    _glContext = std::move(glContext);
+    return true;
 }
 
 }}

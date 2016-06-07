@@ -37,6 +37,30 @@ namespace { enum { None = 0L }; }
 
 namespace Magnum { namespace Platform {
 
+WindowlessGlxContext::WindowlessGlxContext(const WindowlessGlxContext::Configuration& configuration) {
+
+}
+
+WindowlessGlxContext::WindowlessGlxContext(NoCreateT) {
+
+}
+
+WindowlessGlxContext::WindowlessGlxContext(WindowlessGlxContext && other) {
+
+}
+
+WindowlessGlxContext::~WindowlessGlxContext() {
+
+}
+
+WindowlessGlxContext& WindowlessGlxContext::operator=(WindowlessGlxContext && other) {
+
+}
+
+bool WindowlessGlxContext::makeCurrent() {
+
+}
+
 #ifndef DOXYGEN_GENERATING_OUTPUT
 WindowlessGlxApplication::WindowlessGlxApplication(const Arguments& arguments): WindowlessGlxApplication{arguments, Configuration{}}  {}
 #endif

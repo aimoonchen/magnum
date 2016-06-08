@@ -463,12 +463,32 @@ void Sdl2Application::setMouseLocked(bool enabled) {
     #endif
 }
 
-#ifndef CORRADE_TARGET_EMSCRIPTEN
+bool Sdl2Application::isTextInputActive() {
+    #ifndef CORRADE_TARGET_EMSCRIPTEN
+    return SDL_IsTextInputActive();
+    #else
+    return _isTextInputActive;
+    #endif
+}
+
+void Sdl2Application::startTextInput() {
+    SDL_StartTextInput();
+    #ifdef CORRADE_TARGET_EMSCRIPTEN
+    _isTextInputActive = true;
+    #endif
+}
+
+void Sdl2Application::stopTextInput() {
+    SDL_StopTextInput();
+    #ifdef CORRADE_TARGET_EMSCRIPTEN
+    _isTextInputActive = false;
+    #endif
+}
+
 void Sdl2Application::setTextInputRect(const Range2Di& rect) {
     SDL_Rect r{rect.min().x(), rect.min().y(), rect.sizeX(), rect.sizeY()};
     SDL_SetTextInputRect(&r);
 }
-#endif
 
 void Sdl2Application::tickEvent() {
     /* If this got called, the tick event is not implemented by user and thus

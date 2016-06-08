@@ -374,13 +374,21 @@ void Sdl2Application::mainLoop() {
 
             case SDL_MOUSEBUTTONDOWN:
             case SDL_MOUSEBUTTONUP: {
-                MouseEvent e(static_cast<MouseEvent::Button>(event.button.button), {event.button.x, event.button.y}, event.button.clicks);
+                MouseEvent e(static_cast<MouseEvent::Button>(event.button.button), {event.button.x, event.button.y}
+                    #ifndef CORRADE_TARGET_EMSCRIPTEN
+                    , event.button.clicks
+                    #endif
+                    );
                 event.type == SDL_MOUSEBUTTONDOWN ? mousePressEvent(e) : mouseReleaseEvent(e);
             } break;
 
             case SDL_MOUSEWHEEL:
                 if(event.wheel.y != 0) {
-                    MouseEvent e(event.wheel.y > 0 ? MouseEvent::Button::WheelUp : MouseEvent::Button::WheelDown, {event.wheel.x, event.wheel.y}, 0);
+                    MouseEvent e(event.wheel.y > 0 ? MouseEvent::Button::WheelUp : MouseEvent::Button::WheelDown, {event.wheel.x, event.wheel.y}
+                        #ifndef CORRADE_TARGET_EMSCRIPTEN
+                        , 0
+                        #endif
+                        );
                     mousePressEvent(e);
                 } break;
 

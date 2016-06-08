@@ -275,7 +275,10 @@ bool Sdl2Application::tryCreateContext(const Configuration& configuration) {
 
 Vector2i Sdl2Application::windowSize() {
     Vector2i size;
+    /** @todo proper fix */
+    #ifndef CORRADE_TARGET_EMSCRIPTEN
     SDL_GetWindowSize(_window, &size.x(), &size.y());
+    #endif
     return size;
 }
 
